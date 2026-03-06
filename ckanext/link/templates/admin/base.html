@@ -1,0 +1,6 @@
+{% ckan_extends %}
+
+{% block content_primary_nav %}
+  {{ super() }}
+  {{ h.build_nav_icon('link_checker.index', _('Link Checker'), icon='link') }}
+{% endblock %}

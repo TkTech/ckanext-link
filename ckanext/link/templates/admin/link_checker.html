@@ -1,0 +1,188 @@
+{% extends "admin/base.html" %}
+
+{% block subtitle %}{{ _('Link Checker') }}{% endblock %}
+
+{% block primary_content_inner %}
+  <h1>{{ _('Link Checker') }}</h1>
+
+  {# Summary stats #}
+  <div class="row" style="margin-bottom: 20px;">
+    <div class="col-md-3">
+      <div class="module-content">
+        <strong>{{ _('Total Checked') }}</strong><br>
+        {{ summary.total }}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="module-content">
+        <strong>{{ _('Broken') }}</strong><br>
+        <span style="color: #d9534f;">{{ summary.broken }}</span>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="module-content">
+        <strong>{{ _('OK') }}</strong><br>
+        <span style="color: #5cb85c;">{{ summary.ok }}</span>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="module-content">
+        <strong>{{ _('Last Checked') }}</strong><br>
+        {% if summary.last_checked %}
+          {{ h.render_datetime(summary.last_checked) }}
+        {% else %}
+          {{ _('Never') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# Job progress (updated via JS when active) #}
+  <div id="job-progress" style="margin-bottom: 20px; {% if job_status not in ('queued', 'started') %}display: none;{% endif %}">
+    <div class="alert alert-info" style="margin-bottom: 0;">
+      <span id="job-progress-text">
+        {% if job_status == 'queued' %}
+          <strong>{{ _('Job queued') }}</strong> &mdash; {{ _('Waiting for worker...') }}
+        {% elif job_status == 'started' %}
+          <strong>{{ _('Checking links...') }}</strong>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  {# Controls row: button + filters #}
+  <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <form method="POST" action="{{ h.url_for('link_checker.index') }}" style="margin: 0;">
+      {{ h.csrf_input() }}
+      <button type="submit" class="btn btn-primary" id="run-btn"
+              {% if job_status in ('queued', 'started') %}disabled{% endif %}>
+        <span id="run-btn-label">
+          {% if job_status in ('queued', 'started') %}
+            {{ _('Link Check Running...') }}
+          {% else %}
+            {{ _('Run Link Check') }}
+          {% endif %}
+        </span>
+      </button>
+    </form>
+    <div>
+      {% if broken_only %}
+        <a href="{{ h.url_for('link_checker.index') }}" class="btn btn-default btn-sm">
+          {{ _('Show All') }}
+        </a>
+        <span class="btn btn-danger btn-sm active">{{ _('Broken Only') }}</span>
+      {% else %}
+        <span class="btn btn-default btn-sm active">{{ _('Show All') }}</span>
+        <a href="{{ h.url_for('link_checker.index', broken_only='1') }}" class="btn btn-danger btn-sm">
+          {{ _('Broken Only') }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Results table #}
+  {% if page.items %}
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>{{ _('Dataset') }}</th>
+          <th>{{ _('URL') }}</th>
+          <th>{{ _('Status') }}</th>
+          <th>{{ _('Checked') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in page.items %}
+          <tr class="{{ 'danger' if result.is_broken else 'success' }}">
+            <td>
+              <a href="{{ h.url_for('dataset.read', id=result.package_id) }}">
+                {{ result.package_name or result.package_id[:8] ~ '...' }}
+              </a>
+            </td>
+            <td>
+              <a href="{{ result.url }}" title="{{ result.url }}" target="_blank" rel="noopener noreferrer"
+                 style="max-width: 400px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
+                {{ result.url }}
+              </a>
+            </td>
+            <td>
+              {% if result.status_code %}
+                <span class="label label-{{ 'danger' if result.is_broken else 'success' }}">
+                  {{ result.status_code }}
+                </span>
+              {% else %}
+                <span class="label label-warning">{{ _('N/A') }}</span>
+              {% endif %}
+            </td>
+            <td>{{ h.render_datetime(result.checked_at) }}</td>
+          </tr>
+          {% if result.error %}
+            <tr class="danger">
+              <td colspan="4" style="border-top: none; padding-top: 0;">
+                <small><strong>{{ _('Error') }}:</strong> {{ result.error }}</small>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {{ page.pager() }}
+  {% else %}
+    <p class="empty">
+      {{ _('No link check results yet. Click "Run Link Check" to start.') }}
+    </p>
+  {% endif %}
+
+  <script>
+  (function() {
+    var active = {{ 'true' if job_status in ('queued', 'started') else 'false' }};
+    if (!active) return;
+
+    var progressUrl = {{ h.url_for('link_checker.progress') | tojson }};
+    var wrap = document.getElementById('job-progress');
+    var text = document.getElementById('job-progress-text');
+    var btn = document.getElementById('run-btn');
+    var btnLabel = document.getElementById('run-btn-label');
+    var i18n = {
+      queued: {{ _('Job queued') | tojson }},
+      waiting: {{ _('Waiting for worker...') | tojson }},
+      checking: {{ _('Checking links...') | tojson }},
+      broken: {{ _('broken') | tojson }},
+      running: {{ _('Link Check Running...') | tojson }}
+    };
+
+    function poll() {
+      fetch(progressUrl, {credentials: 'same-origin'})
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var s = data.status;
+          var p = data.progress || {};
+
+          if (!s || s === 'finished' || s === 'failed' || s === 'stopped' || s === 'canceled') {
+            window.location.reload();
+            return;
+          }
+
+          wrap.style.display = '';
+
+          if (s === 'queued' || !p.total) {
+            text.innerHTML = '<strong>' + i18n.queued + '</strong> &mdash; ' + i18n.waiting;
+          } else {
+            text.innerHTML = '<strong>' + i18n.checking + '</strong> ' +
+              p.checked + ' / ' + p.total + ' (' + p.broken + ' ' + i18n.broken + ')';
+          }
+
+          btn.disabled = true;
+          btnLabel.textContent = i18n.running;
+          setTimeout(poll, 2000);
+        })
+        .catch(function() {
+          setTimeout(poll, 5000);
+        });
+    }
+
+    setTimeout(poll, 2000);
+  })();
+  </script>
+{% endblock %}

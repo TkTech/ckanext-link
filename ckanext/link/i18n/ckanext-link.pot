@@ -1,0 +1,116 @@
+# Translations template for ckanext-link.
+# Copyright (C) 2024 CKAN
+# This file is distributed under the same license as the ckanext-link
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ckanext-link 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel\n"
+
+#: ckanext/link/templates/admin/base.html
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Link Checker"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Total Checked"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Broken"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "OK"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Last Checked"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Never"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Job queued"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Waiting for worker..."
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Checking links..."
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "broken"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Link Check Running..."
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Run Link Check"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Show All"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Broken Only"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Dataset"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "URL"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Status"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Error"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "Checked"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "N/A"
+msgstr ""
+
+#: ckanext/link/templates/admin/link_checker.html
+msgid "No link check results yet. Click \"Run Link Check\" to start."
+msgstr ""
+
+#: ckanext/link/views.py
+msgid "Need to be system administrator to administer"
+msgstr ""
+
+#: ckanext/link/views.py
+msgid "A link check job is already running."
+msgstr ""
+
+#: ckanext/link/views.py
+msgid "Link check job has been queued."
+msgstr ""

@@ -1,0 +1,90 @@
+# French translations for ckanext-link.
+# Copyright (C) 2024 CKAN
+# This file is distributed under the same license as the ckanext-link
+# project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ckanext-link 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language: fr\n"
+"Language-Team: French\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel\n"
+
+msgid "Link Checker"
+msgstr "Vérificateur de liens"
+
+msgid "Total Checked"
+msgstr "Total vérifié"
+
+msgid "Broken"
+msgstr "Brisés"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Last Checked"
+msgstr "Dernière vérification"
+
+msgid "Never"
+msgstr "Jamais"
+
+msgid "Job queued"
+msgstr "Tâche en file d'attente"
+
+msgid "Waiting for worker..."
+msgstr "En attente d'un worker..."
+
+msgid "Checking links..."
+msgstr "Vérification des liens..."
+
+msgid "broken"
+msgstr "brisés"
+
+msgid "Link Check Running..."
+msgstr "Vérification en cours..."
+
+msgid "Run Link Check"
+msgstr "Lancer la vérification des liens"
+
+msgid "Show All"
+msgstr "Afficher tout"
+
+msgid "Broken Only"
+msgstr "Brisés seulement"
+
+msgid "Dataset"
+msgstr "Jeu de données"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Checked"
+msgstr "Vérifié"
+
+msgid "N/A"
+msgstr "N/D"
+
+msgid "No link check results yet. Click \"Run Link Check\" to start."
+msgstr "Aucun résultat de vérification. Cliquez sur « Lancer la vérification des liens » pour commencer."
+
+msgid "Need to be system administrator to administer"
+msgstr "Vous devez être administrateur système pour accéder à cette page"
+
+msgid "A link check job is already running."
+msgstr "Une tâche de vérification des liens est déjà en cours."
+
+msgid "Link check job has been queued."
+msgstr "La tâche de vérification des liens a été mise en file d'attente."
