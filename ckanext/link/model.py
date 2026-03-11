@@ -10,6 +10,8 @@ from ckan.model import meta
 
 log = logging.getLogger(__name__)
 
+HEARTBEAT_TIMEOUT = datetime.timedelta(minutes=5)
+
 link_check_result_table = Table(
     "link_check_result",
     meta.metadata,
@@ -30,6 +32,7 @@ link_check_job_table = Table(
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("job_id", types.UnicodeText, nullable=False),
     Column("created_at", DateTime, default=datetime.datetime.utcnow),
+    Column("heartbeat_at", DateTime, nullable=True),
 )
 
 
@@ -49,15 +52,11 @@ class LinkCheckJob:
     id: int
     job_id: str
     created_at: datetime.datetime
+    heartbeat_at: Optional[datetime.datetime]
 
 
 meta.registry.map_imperatively(LinkCheckResult, link_check_result_table)
 meta.registry.map_imperatively(LinkCheckJob, link_check_job_table)
-
-
-def init_db():
-    link_check_result_table.create(meta.engine, checkfirst=True)
-    link_check_job_table.create(meta.engine, checkfirst=True)
 
 
 def upsert_result(
@@ -126,11 +125,25 @@ def get_summary() -> dict:
     }
 
 
+def clear_results():
+    meta.Session.query(LinkCheckResult).delete()
+    meta.Session.commit()
+
+
 # -- Job state --
 
-def save_job_id(job_id: str):
+def get_saved_job() -> Optional[LinkCheckJob]:
+    return meta.Session.query(LinkCheckJob).first()
+
+
+def get_saved_job_id() -> Optional[str]:
+    row = get_saved_job()
+    return row.job_id if row else None
+
+
+def save_new_job(job_id: str):
+    """Start a fresh run with a new created_at."""
     session = meta.Session
-    # Keep only one row — the current job.
     session.query(LinkCheckJob).delete()
     job = LinkCheckJob()
     job.job_id = job_id
@@ -139,9 +152,32 @@ def save_job_id(job_id: str):
     session.commit()
 
 
-def get_saved_job_id() -> Optional[str]:
+def resume_job(job_id: str):
+    """Resume a crashed run — keeps created_at so already-checked
+    resources are skipped, updates job_id for the new RQ job."""
     row = meta.Session.query(LinkCheckJob).first()
-    return row.job_id if row else None
+    if row:
+        row.job_id = job_id
+        row.heartbeat_at = None
+        meta.Session.commit()
+    else:
+        save_new_job(job_id)
+
+
+def update_heartbeat():
+    row = meta.Session.query(LinkCheckJob).first()
+    if row:
+        row.heartbeat_at = datetime.datetime.utcnow()
+        meta.Session.commit()
+
+
+def is_heartbeat_stale() -> bool:
+    """True if the job hasn't sent a heartbeat within HEARTBEAT_TIMEOUT."""
+    row = get_saved_job()
+    if not row:
+        return False
+    ts = row.heartbeat_at or row.created_at
+    return datetime.datetime.utcnow() - ts > HEARTBEAT_TIMEOUT
 
 
 def clear_job():

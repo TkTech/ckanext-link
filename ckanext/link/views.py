@@ -22,8 +22,12 @@ link_checker = Blueprint(
 
 
 def _get_job_info():
-    """Return (status, progress) for the current link check job, or
-    (None, {}) if no job is tracked or it no longer exists."""
+    """Return (status, progress) for the current link check job.
+
+    Returns ("stale", progress) when the worker appears to have died
+    (heartbeat not updated within the timeout window).
+    Returns (None, {}) if no job is tracked.
+    """
     job_id = link_model.get_saved_job_id()
     if not job_id:
         return None, {}
@@ -32,12 +36,18 @@ def _get_job_info():
         job = RqJob.fetch(job_id, connection=conn)
         status = job.get_status()
         progress = job.meta.get("progress", {})
-        # Clean up finished/failed jobs from our tracking table.
+        # Clean up finished/failed jobs.
         if status in ("finished", "failed", "stopped", "canceled"):
             link_model.clear_job()
             return status, progress
+        # Detect dead worker via heartbeat.
+        if status in ("queued", "started") and link_model.is_heartbeat_stale():
+            return "stale", progress
         return status, progress
     except NoSuchJobError:
+        # Job expired from Redis — check if heartbeat is also stale.
+        if link_model.is_heartbeat_stale():
+            return "stale", {}
         link_model.clear_job()
         return None, {}
 
@@ -101,11 +111,20 @@ def run_check():
         h.flash_notice(_("A link check job is already running."))
         return h.redirect_to("link_checker.index")
 
+    is_resume = job_status == "stale"
+
     job = jobs.enqueue(
         check_all_links,
         title="Link Checker: check all resource URLs",
         rq_kwargs={"timeout": 3600},
     )
-    link_model.save_job_id(job.id)
-    h.flash_success(_("Link check job has been queued."))
+
+    if is_resume:
+        link_model.resume_job(job.id)
+        h.flash_success(_("Resuming link check from where it left off."))
+    else:
+        link_model.clear_results()
+        link_model.save_new_job(job.id)
+        h.flash_success(_("Link check job has been queued."))
+
     return h.redirect_to("link_checker.index")

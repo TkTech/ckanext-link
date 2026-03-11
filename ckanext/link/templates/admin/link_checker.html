@@ -37,7 +37,13 @@
     </div>
   </div>
 
-  {# Job progress (updated via JS when active) #}
+  {# Job progress / stale warning #}
+  {% if job_status == 'stale' %}
+    <div class="alert alert-warning" style="margin-bottom: 20px;">
+      <strong>{{ _('Worker stopped responding.') }}</strong>
+      {{ _('The previous job appears to have crashed. Click Resume to continue where it left off.') }}
+    </div>
+  {% endif %}
   <div id="job-progress" style="margin-bottom: 20px; {% if job_status not in ('queued', 'started') %}display: none;{% endif %}">
     <div class="alert alert-info" style="margin-bottom: 0;">
       <span id="job-progress-text">
@@ -54,16 +60,19 @@
   <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
     <form method="POST" action="{{ h.url_for('link_checker.index') }}" style="margin: 0;">
       {{ h.csrf_input() }}
-      <button type="submit" class="btn btn-primary" id="run-btn"
-              {% if job_status in ('queued', 'started') %}disabled{% endif %}>
-        <span id="run-btn-label">
-          {% if job_status in ('queued', 'started') %}
-            {{ _('Link Check Running...') }}
-          {% else %}
-            {{ _('Run Link Check') }}
-          {% endif %}
-        </span>
-      </button>
+      {% if job_status in ('queued', 'started') %}
+        <button type="submit" class="btn btn-primary" id="run-btn" disabled>
+          <span id="run-btn-label">{{ _('Link Check Running...') }}</span>
+        </button>
+      {% elif job_status == 'stale' %}
+        <button type="submit" class="btn btn-warning" id="run-btn">
+          <span id="run-btn-label">{{ _('Resume Link Check') }}</span>
+        </button>
+      {% else %}
+        <button type="submit" class="btn btn-primary" id="run-btn">
+          <span id="run-btn-label">{{ _('Run Link Check') }}</span>
+        </button>
+      {% endif %}
     </form>
     <div>
       {% if broken_only %}
@@ -159,7 +168,7 @@
           var s = data.status;
           var p = data.progress || {};
 
-          if (!s || s === 'finished' || s === 'failed' || s === 'stopped' || s === 'canceled') {
+          if (!s || s === 'finished' || s === 'failed' || s === 'stale') {
             window.location.reload();
             return;
           }

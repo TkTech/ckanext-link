@@ -88,3 +88,15 @@ msgstr "Une tâche de vérification des liens est déjà en cours."
 
 msgid "Link check job has been queued."
 msgstr "La tâche de vérification des liens a été mise en file d'attente."
+
+msgid "Worker stopped responding."
+msgstr "Le worker ne répond plus."
+
+msgid "The previous job appears to have crashed. Click Resume to continue where it left off."
+msgstr "La tâche précédente semble avoir échoué. Cliquez sur Reprendre pour continuer là où elle s'est arrêtée."
+
+msgid "Resume Link Check"
+msgstr "Reprendre la vérification des liens"
+
+msgid "Resuming link check from where it left off."
+msgstr "Reprise de la vérification des liens là où elle s'était arrêtée."
